@@ -18,7 +18,7 @@ simple_key : quoted_key | unquoted_key ;
 
 unquoted_key : UNQUOTED_KEY ;
 
-quoted_key :  basic_string | literal_string ;
+quoted_key :  BASIC_STRING | LITERAL_STRING ;
 
 dotted_key : simple_key ('.' simple_key)+ ;
 
