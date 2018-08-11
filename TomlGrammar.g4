@@ -24,15 +24,7 @@ dotted_key : simple_key ('.' simple_key)+ ;
 
 value : string | integer | floating_point | bool | date_time | array | inline_table ;
 
-string : basic_string | ml_basic_string | literal_string | ml_literal_string ;
-
-basic_string : BASIC_STRING ;
-
-ml_basic_string : BASIC_STRING ;
-
-literal_string : LITERAL_STRING ;
-
-ml_literal_string : LITERAL_STRING ;
+string : BASIC_STRING | ML_BASIC_STRING | LITERAL_STRING | ML_LITERAL_STRING ;
 
 integer : DEC_INT | HEX_INT | OCT_INT | BIN_INT ;
 
@@ -63,7 +55,7 @@ array_table : '[[' key ']]' ;
 /*
  * Lexer Rules
  */
- 
+
 WS : [ \t]+ -> skip ;
 NL : ('\r'? '\n')+ ;
 COMMENT : '#' (~[\n])* ;
@@ -71,31 +63,38 @@ COMMENT : '#' (~[\n])* ;
 fragment DIGIT : [0-9] ;
 fragment ALPHA : [A-Za-z] ;
 
+// booleans
 BOOLEAN : 'true' | 'false' ;
 
-fragment ESC : '\\' (["\\/bfnrt] | 'u' HEX_DIGIT | 'U' HEX_DIGIT) ;
-BASIC_STRING : '"' (ESC | .)*? '"' ;
+// strings
+fragment ESC : '\\' (["\\/bfnrt] | UNICODE | EX_UNICODE) ;
+fragment ML_ESC : '\\' '\r'? '\n' | ESC ;
+fragment UNICODE : 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT ;
+fragment EX_UNICODE : 'U' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT ;
+BASIC_STRING : '"' (ESC | ~["\\\n])*? '"' ;
+ML_BASIC_STRING : '"""' (ML_ESC | ~["\\])*? '"""' ;
+LITERAL_STRING : '\'' (~['\n])*? '\'' ;
+ML_LITERAL_STRING : '\'\'\'' (.)*? '\'\'\'';
 
-LITERAL_STRING : '\'' (.)*? '\'' ;
+// floating point numbers
+fragment EXP : ('e' | 'E') DEC_INT ;
+fragment ZERO_PREFIXABLE_INT : DIGIT (DIGIT | '_' DIGIT)* ;
+fragment FRAC : '.' ZERO_PREFIXABLE_INT ;
+FLOAT : DEC_INT ( EXP | FRAC EXP?) ;
+INF : [+-]? 'inf' ;
+NAN : [+-]? 'nan' ;
 
+// integers
 fragment HEX_DIGIT : [A-F] | DIGIT ;
 fragment DIGIT_1_9 : [1-9] ;
 fragment DIGIT_0_7 : [0-7] ;
 fragment DIGIT_0_1 : [0-1] ;
-DEC_INT : ('+' | '-')? DIGIT | DIGIT_1_9 (DIGIT | '_' DIGIT)+ ;
+DEC_INT : [+-]? (DIGIT | (DIGIT_1_9 (DIGIT | '_' DIGIT)+)) ;
 HEX_INT : '0x' HEX_DIGIT (HEX_DIGIT | '_' HEX_DIGIT)* ;
 OCT_INT : '0o' DIGIT_0_7 (DIGIT_0_7 | '_' DIGIT_0_7) ;
 BIN_INT : '0b' DIGIT_0_1 (DIGIT_0_1 | '_' DIGIT_0_1)* ;
 
-UNQUOTED_KEY : (ALPHA | DIGIT | '-' | '_')+ ;
-
-fragment EXP : 'e' DEC_INT ;
-fragment ZERO_PREFIXABLE_INT : DIGIT (DIGIT | '_' DIGIT)* ;
-fragment FRAC : '.' ZERO_PREFIXABLE_INT ;
-FLOAT : DEC_INT (EXP | FRAC EXP?) ;
-INF : 'INF' ;
-NAN : 'NAN' ;
-
+// dates
 fragment YEAR : DIGIT DIGIT DIGIT DIGIT ;
 fragment MONTH : DIGIT DIGIT ;
 fragment DAY : DIGIT DIGIT ;
@@ -113,3 +112,6 @@ OFFSET_DATE_TIME : FULL_DATE DELIM FULL_TIME ;
 LOCAL_DATE_TIME : FULL_DATE DELIM PARTIAL_TIME ;
 LOCAL_DATE : FULL_DATE ;
 LOCAL_TIME : PARTIAL_TIME ;
+
+// keys
+UNQUOTED_KEY : (ALPHA | DIGIT | '-' | '_')+ ;
