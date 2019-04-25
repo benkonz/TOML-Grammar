@@ -1,10 +1,10 @@
-grammar TomlGrammar;
+grammar Toml;
 
 /*
  * Parser Rules
  */
 
-toml : (expression NL)+ ;
+toml : expression (NL expression)* ;
 
 expression : key_value comment | table comment | comment ;
 
@@ -75,7 +75,6 @@ BASIC_STRING : '"' (ESC | ~["\\\n])*? '"' ;
 ML_BASIC_STRING : '"""' (ML_ESC | ~["\\])*? '"""' ;
 LITERAL_STRING : '\'' (~['\n])*? '\'' ;
 ML_LITERAL_STRING : '\'\'\'' (.)*? '\'\'\'';
-
 // floating point numbers
 fragment EXP : ('e' | 'E') DEC_INT ;
 fragment ZERO_PREFIXABLE_INT : DIGIT (DIGIT | '_' DIGIT)* ;
@@ -83,7 +82,6 @@ fragment FRAC : '.' ZERO_PREFIXABLE_INT ;
 FLOAT : DEC_INT ( EXP | FRAC EXP?) ;
 INF : [+-]? 'inf' ;
 NAN : [+-]? 'nan' ;
-
 // integers
 fragment HEX_DIGIT : [A-F] | DIGIT ;
 fragment DIGIT_1_9 : [1-9] ;
@@ -93,7 +91,6 @@ DEC_INT : [+-]? (DIGIT | (DIGIT_1_9 (DIGIT | '_' DIGIT)+)) ;
 HEX_INT : '0x' HEX_DIGIT (HEX_DIGIT | '_' HEX_DIGIT)* ;
 OCT_INT : '0o' DIGIT_0_7 (DIGIT_0_7 | '_' DIGIT_0_7) ;
 BIN_INT : '0b' DIGIT_0_1 (DIGIT_0_1 | '_' DIGIT_0_1)* ;
-
 // dates
 fragment YEAR : DIGIT DIGIT DIGIT DIGIT ;
 fragment MONTH : DIGIT DIGIT ;
@@ -112,6 +109,5 @@ OFFSET_DATE_TIME : FULL_DATE DELIM FULL_TIME ;
 LOCAL_DATE_TIME : FULL_DATE DELIM PARTIAL_TIME ;
 LOCAL_DATE : FULL_DATE ;
 LOCAL_TIME : PARTIAL_TIME ;
-
 // keys
 UNQUOTED_KEY : (ALPHA | DIGIT | '-' | '_')+ ;
